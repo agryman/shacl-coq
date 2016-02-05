@@ -1,0 +1,377 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+<link href="coqdoc.css" rel="stylesheet" type="text/css"/>
+<title>recursion</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library recursion</h1>
+
+<div class="code">
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+<a name="lab1"></a><h1 class="section">Formal Specification of Recursion in W3C SHACL</h1>
+
+
+<div class="paragraph"> </div>
+
+This document defines SHACL and gives a meaning to
+certain types of recursion.
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Require</span> <span class="id" type="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Bool.Bool.html#"><span class="id" type="library">Bool</span></a>.<br/>
+<span class="id" type="keyword">Require</span> <span class="id" type="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Lists.List.html#"><span class="id" type="library">List</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+<a name="lab2"></a><h2 class="section">Basic RDF Concepts</h2>
+
+
+<div class="paragraph"> </div>
+
+<a name="lab3"></a><h3 class="section">RDF Terms</h3>
+
+
+<div class="paragraph"> </div>
+
+RDF is a language for making <i>statements</i> about things.
+Statements are composed of <i>terms</i>.
+A term is either an <i>IRI</i>, a <i>literal</i>, or a <i>blank node</i>.
+
+<div class="paragraph"> </div>
+
+<ul class="doclist">
+<li> an IRI is a sequence of characters that identifies a resource
+
+</li>
+<li> a literal is a lexical value that identifies some value of some datatype such as a number or character string
+
+</li>
+<li> blank node identifies an existential variable
+
+</li>
+</ul>
+Each of these types of terms has its own syntax rules, but to start each type
+will be modelled as a disjoint, countably infinite
+subset of terms that together cover the set of all terms.
+
+<div class="paragraph"> </div>
+
+Let <span class="inlinecode"><span class="id" type="var">Term</span></span> denote the set of all RDF terms.
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Inductive</span> <a name="Term"><span class="id" type="inductive">Term</span></a> : <span class="id" type="keyword">Type</span> :=<br/>
+&nbsp;&nbsp;<a name="iri"><span class="id" type="constructor">iri</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#nat"><span class="id" type="inductive">nat</span></a> -&gt; <a class="idref" href="recursion.html#Term"><span class="id" type="inductive">Term</span></a><br/>
+| <a name="lit"><span class="id" type="constructor">lit</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#nat"><span class="id" type="inductive">nat</span></a> -&gt; <a class="idref" href="recursion.html#Term"><span class="id" type="inductive">Term</span></a><br/>
+| <a name="bn"><span class="id" type="constructor">bn</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#nat"><span class="id" type="inductive">nat</span></a> -&gt; <a class="idref" href="recursion.html#Term"><span class="id" type="inductive">Term</span></a> .<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab4"></a><h3 class="section">IRIs</h3>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="is_iri"><span class="id" type="definition">is_iri</span></a> (<span class="id" type="var">t</span> : <a class="idref" href="recursion.html#Term"><span class="id" type="inductive">Term</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="recursion.html#t"><span class="id" type="variable">t</span></a> <span class="id" type="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="recursion.html#iri"><span class="id" type="constructor">iri</span></a> <span class="id" type="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a> | <span class="id" type="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#false"><span class="id" type="constructor">false</span></a><br/>
+&nbsp;&nbsp;<span class="id" type="keyword">end</span> .<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="good_iri"><span class="id" type="lemma">good_iri</span></a>: <a class="idref" href="recursion.html#is_iri"><span class="id" type="definition">is_iri</span></a> (<a class="idref" href="recursion.html#iri"><span class="id" type="constructor">iri</span></a> 0) <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="bad_iri"><span class="id" type="lemma">bad_iri</span></a>: <a class="idref" href="recursion.html#is_iri"><span class="id" type="definition">is_iri</span></a> (<a class="idref" href="recursion.html#lit"><span class="id" type="constructor">lit</span></a> 0) <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#false"><span class="id" type="constructor">false</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab5"></a><h3 class="section">Literals</h3>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="is_lit"><span class="id" type="definition">is_lit</span></a> (<span class="id" type="var">t</span> : <a class="idref" href="recursion.html#Term"><span class="id" type="inductive">Term</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="recursion.html#t"><span class="id" type="variable">t</span></a> <span class="id" type="keyword">with</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="recursion.html#lit"><span class="id" type="constructor">lit</span></a> <span class="id" type="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a> | <span class="id" type="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#false"><span class="id" type="constructor">false</span></a><br/>
+&nbsp;&nbsp;<span class="id" type="keyword">end</span> .<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab6"></a><h3 class="section">Blank Nodes</h3>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="is_bn"><span class="id" type="definition">is_bn</span></a> (<span class="id" type="var">t</span> : <a class="idref" href="recursion.html#Term"><span class="id" type="inductive">Term</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="recursion.html#t"><span class="id" type="variable">t</span></a> <span class="id" type="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="recursion.html#bn"><span class="id" type="constructor">bn</span></a> <span class="id" type="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a> | <span class="id" type="var">_</span> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#false"><span class="id" type="constructor">false</span></a><br/>
+&nbsp;&nbsp;<span class="id" type="keyword">end</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab7"></a><h3 class="section">Terms Used in Examples</h3>
+
+
+<div class="paragraph"> </div>
+
+Define some symbols for the terms we use in the examples. 
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Alice'"><span class="id" type="notation">"</span></a>'Alice'" := (<a class="idref" href="recursion.html#lit"><span class="id" type="constructor">lit</span></a> 0).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Bob'"><span class="id" type="notation">"</span></a>'Bob'" := (<a class="idref" href="recursion.html#lit"><span class="id" type="constructor">lit</span></a> 1).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Charlie'"><span class="id" type="notation">"</span></a>'Charlie'" := (<a class="idref" href="recursion.html#lit"><span class="id" type="constructor">lit</span></a> 2).<br/>
+
+<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'alice'"><span class="id" type="notation">"</span></a>'alice'" := (<a class="idref" href="recursion.html#iri"><span class="id" type="constructor">iri</span></a> 0).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'bob'"><span class="id" type="notation">"</span></a>'bob'" := (<a class="idref" href="recursion.html#iri"><span class="id" type="constructor">iri</span></a> 1).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'charlie'"><span class="id" type="notation">"</span></a>'charlie'" := (<a class="idref" href="recursion.html#iri"><span class="id" type="constructor">iri</span></a> 2).<br/>
+
+<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'rdf_type'"><span class="id" type="notation">"</span></a>'rdf_type'" := (<a class="idref" href="recursion.html#iri"><span class="id" type="constructor">iri</span></a> 3).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'foaf_Person'"><span class="id" type="notation">"</span></a>'foaf_Person'" := (<a class="idref" href="recursion.html#iri"><span class="id" type="constructor">iri</span></a> 4).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'foaf_name'"><span class="id" type="notation">"</span></a>'foaf_name'" := (<a class="idref" href="recursion.html#iri"><span class="id" type="constructor">iri</span></a> 5).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'foaf_knows'"><span class="id" type="notation">"</span></a>'foaf_knows'" := (<a class="idref" href="recursion.html#iri"><span class="id" type="constructor">iri</span></a> 6).<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="Alice_is_Alice"><span class="id" type="lemma">Alice_is_Alice</span></a>: <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="Alice_is_not_Bob"><span class="id" type="lemma">Alice_is_not_Bob</span></a>: <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'<>'_x"><span class="id" type="notation">&lt;&gt;</span></a> <a class="idref" href="recursion.html#::'Bob'"><span class="id" type="notation">Bob</span></a>.<br/>
+<span class="id" type="tactic">discriminate</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="Alice_is_not_an_iri"><span class="id" type="lemma">Alice_is_not_an_iri</span></a>: <a class="idref" href="recursion.html#is_iri"><span class="id" type="definition">is_iri</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#false"><span class="id" type="constructor">false</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="Alice_is_a_literal"><span class="id" type="lemma">Alice_is_a_literal</span></a>: <a class="idref" href="recursion.html#is_lit"><span class="id" type="definition">is_lit</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab8"></a><h3 class="section">3-Tuples of Terms</h3>
+
+
+<div class="paragraph"> </div>
+
+RDF statements are formed from 3-tuples of RDF terms.
+
+<div class="paragraph"> </div>
+
+Let <span class="inlinecode"><span class="id" type="var">Term3</span></span> be set set of all 3-tuples of RDF terms.
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Inductive</span> <a name="Term3"><span class="id" type="inductive">Term3</span></a> : <span class="id" type="keyword">Set</span> := <br/>
+&nbsp;&nbsp;<a name="t3"><span class="id" type="constructor">t3</span></a> : <a class="idref" href="recursion.html#Term"><span class="id" type="inductive">Term</span></a> -&gt; <a class="idref" href="recursion.html#Term"><span class="id" type="inductive">Term</span></a> -&gt; <a class="idref" href="recursion.html#Term"><span class="id" type="inductive">Term</span></a> -&gt; <a class="idref" href="recursion.html#Term3"><span class="id" type="inductive">Term3</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="alice_is_a_person"><span class="id" type="definition">alice_is_a_person</span></a> := <a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'alice'"><span class="id" type="notation">alice</span></a> <a class="idref" href="recursion.html#::'rdf_type'"><span class="id" type="notation">rdf_type</span></a> <a class="idref" href="recursion.html#::'foaf_Person'"><span class="id" type="notation">foaf_Person</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab9"></a><h3 class="section">subject, predicate, object</h3>
+
+
+<div class="paragraph"> </div>
+
+<ul class="doclist">
+<li> the first term is called the <i>subject</i>
+
+
+</li>
+<li> the second term is called the <i>predicate</i>
+
+
+</li>
+<li> the third term is called the <i>object</i>
+
+
+</li>
+</ul>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="subject"><span class="id" type="definition">subject</span></a> (<span class="id" type="var">t</span> : <a class="idref" href="recursion.html#Term3"><span class="id" type="inductive">Term3</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="recursion.html#t"><span class="id" type="variable">t</span></a> <span class="id" type="keyword">with</span> <a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <span class="id" type="var">s</span> <span class="id" type="var">_</span> <span class="id" type="var">_</span> =&gt; <span class="id" type="var">s</span> <span class="id" type="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="predicate"><span class="id" type="definition">predicate</span></a> (<span class="id" type="var">t</span> : <a class="idref" href="recursion.html#Term3"><span class="id" type="inductive">Term3</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="recursion.html#t"><span class="id" type="variable">t</span></a> <span class="id" type="keyword">with</span> <a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <span class="id" type="var">_</span> <span class="id" type="var">p</span> <span class="id" type="var">_</span> =&gt; <span class="id" type="var">p</span> <span class="id" type="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="object"><span class="id" type="definition">object</span></a> (<span class="id" type="var">t</span> : <a class="idref" href="recursion.html#Term3"><span class="id" type="inductive">Term3</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="recursion.html#t"><span class="id" type="variable">t</span></a> <span class="id" type="keyword">with</span> <a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <span class="id" type="var">_</span> <span class="id" type="var">_</span> <span class="id" type="var">o</span> =&gt; <span class="id" type="var">o</span> <span class="id" type="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="subject_is_alice"><span class="id" type="lemma">subject_is_alice</span></a>: <a class="idref" href="recursion.html#subject"><span class="id" type="definition">subject</span></a> <a class="idref" href="recursion.html#alice_is_a_person"><span class="id" type="definition">alice_is_a_person</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="recursion.html#::'alice'"><span class="id" type="notation">alice</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="predicate_is_rdf_type"><span class="id" type="lemma">predicate_is_rdf_type</span></a>: <a class="idref" href="recursion.html#predicate"><span class="id" type="definition">predicate</span></a> <a class="idref" href="recursion.html#alice_is_a_person"><span class="id" type="definition">alice_is_a_person</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="recursion.html#::'rdf_type'"><span class="id" type="notation">rdf_type</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="object_is_foaf_Person"><span class="id" type="lemma">object_is_foaf_Person</span></a>: <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#object"><span class="id" type="definition">object</span></a> <a class="idref" href="recursion.html#alice_is_a_person"><span class="id" type="definition">alice_is_a_person</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="recursion.html#::'foaf_Person'"><span class="id" type="notation">foaf_Person</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab10"></a><h3 class="section">Triples</h3>
+
+A 3-tuple defines a valid RDF statement when the subject is not a literal
+and the predicate is an IRI.
+A valid RDF statement is called a <i>triple</i>.
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="is_triple"><span class="id" type="definition">is_triple</span></a> (<span class="id" type="var">t</span> : <a class="idref" href="recursion.html#Term3"><span class="id" type="inductive">Term3</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">let</span> <span class="id" type="var">s</span> := <a class="idref" href="recursion.html#subject"><span class="id" type="definition">subject</span></a> <a class="idref" href="recursion.html#t"><span class="id" type="variable">t</span></a> <span class="id" type="keyword">in</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">let</span> <span class="id" type="var">p</span> := <a class="idref" href="recursion.html#predicate"><span class="id" type="definition">predicate</span></a> <a class="idref" href="recursion.html#t"><span class="id" type="variable">t</span></a> <span class="id" type="keyword">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#andb"><span class="id" type="definition">andb</span></a> (<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#negb"><span class="id" type="definition">negb</span></a> (<a class="idref" href="recursion.html#is_lit"><span class="id" type="definition">is_lit</span></a> <a class="idref" href="recursion.html#s"><span class="id" type="variable">s</span></a>)) (<a class="idref" href="recursion.html#is_iri"><span class="id" type="definition">is_iri</span></a> <a class="idref" href="recursion.html#p"><span class="id" type="variable">p</span></a>)) .<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="valid_triple"><span class="id" type="lemma">valid_triple</span></a> :  <a class="idref" href="recursion.html#is_triple"><span class="id" type="definition">is_triple</span></a> <a class="idref" href="recursion.html#alice_is_a_person"><span class="id" type="definition">alice_is_a_person</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+The 3-tuple (Alice, Alice, Alice) is not a valid triple because
+the subject is a literal and the predicate is not an IRI. 
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="invalid_triple"><span class="id" type="lemma">invalid_triple</span></a>: <a class="idref" href="recursion.html#is_triple"><span class="id" type="definition">is_triple</span></a> (<a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#false"><span class="id" type="constructor">false</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="Graph"><span class="id" type="definition">Graph</span></a> := <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#list"><span class="id" type="inductive">list</span></a> <a class="idref" href="recursion.html#Term3"><span class="id" type="inductive">Term3</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fixpoint</span> <a name="is_graph"><span class="id" type="definition">is_graph</span></a> (<span class="id" type="var">g</span>: <a class="idref" href="recursion.html#Graph"><span class="id" type="definition">Graph</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="recursion.html#g"><span class="id" type="variable">g</span></a> <span class="id" type="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#nil"><span class="id" type="constructor">nil</span></a> =&gt; <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a><br/>
+&nbsp;&nbsp;| <span class="id" type="var">t</span><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a><span class="id" type="var">h</span> =&gt; <span class="id" type="keyword">if</span> (<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#negb"><span class="id" type="definition">negb</span></a> (<a class="idref" href="recursion.html#is_triple"><span class="id" type="definition">is_triple</span></a> <span class="id" type="var">t</span>)) <span class="id" type="keyword">then</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#false"><span class="id" type="constructor">false</span></a> <span class="id" type="keyword">else</span> (<a class="idref" href="recursion.html#is_graph"><span class="id" type="definition">is_graph</span></a> <span class="id" type="var">h</span>)<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="empty_graph"><span class="id" type="definition">empty_graph</span></a> := <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#nil"><span class="id" type="constructor">nil</span></a>:(<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#list"><span class="id" type="inductive">list</span></a> <a class="idref" href="recursion.html#Term3"><span class="id" type="inductive">Term3</span></a>).<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="empty_graph_is_valid"><span class="id" type="lemma">empty_graph_is_valid</span></a>: <a class="idref" href="recursion.html#is_graph"><span class="id" type="definition">is_graph</span></a> <a class="idref" href="recursion.html#empty_graph"><span class="id" type="definition">empty_graph</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="singleton_graph"><span class="id" type="definition">singleton_graph</span></a> := <a class="idref" href="recursion.html#alice_is_a_person"><span class="id" type="definition">alice_is_a_person</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#nil"><span class="id" type="constructor">nil</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="singleton_graph_is_valid"><span class="id" type="lemma">singleton_graph_is_valid</span></a>: <a class="idref" href="recursion.html#is_graph"><span class="id" type="definition">is_graph</span></a> <a class="idref" href="recursion.html#singleton_graph"><span class="id" type="definition">singleton_graph</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="Alice_graph"><span class="id" type="definition">Alice_graph</span></a> := <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#nil"><span class="id" type="constructor">nil</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="Alice_graph_is_invalid"><span class="id" type="lemma">Alice_graph_is_invalid</span></a>: <a class="idref" href="recursion.html#is_graph"><span class="id" type="definition">is_graph</span></a> <a class="idref" href="recursion.html#Alice_graph"><span class="id" type="definition">Alice_graph</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#false"><span class="id" type="constructor">false</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="alice_graph"><span class="id" type="definition">alice_graph</span></a> :=<br/>
+&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'alice'"><span class="id" type="notation">alice</span></a> <a class="idref" href="recursion.html#::'rdf_type'"><span class="id" type="notation">rdf_type</span></a> <a class="idref" href="recursion.html#::'foaf_Person'"><span class="id" type="notation">foaf_Person</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a><br/>
+&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'alice'"><span class="id" type="notation">alice</span></a> <a class="idref" href="recursion.html#::'foaf_name'"><span class="id" type="notation">foaf_name</span></a> <a class="idref" href="recursion.html#::'Alice'"><span class="id" type="notation">Alice</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a><br/>
+&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'alice'"><span class="id" type="notation">alice</span></a> <a class="idref" href="recursion.html#::'foaf_knows'"><span class="id" type="notation">foaf_knows</span></a> <a class="idref" href="recursion.html#::'bob'"><span class="id" type="notation">bob</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a><br/>
+&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'alice'"><span class="id" type="notation">alice</span></a> <a class="idref" href="recursion.html#::'foaf_knows'"><span class="id" type="notation">foaf_knows</span></a> <a class="idref" href="recursion.html#::'charlie'"><span class="id" type="notation">charlie</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a><br/>
+&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'bob'"><span class="id" type="notation">bob</span></a> <a class="idref" href="recursion.html#::'rdf_type'"><span class="id" type="notation">rdf_type</span></a> <a class="idref" href="recursion.html#::'foaf_Person'"><span class="id" type="notation">foaf_Person</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a><br/>
+&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'bob'"><span class="id" type="notation">bob</span></a> <a class="idref" href="recursion.html#::'foaf_name'"><span class="id" type="notation">foaf_name</span></a> <a class="idref" href="recursion.html#::'Bob'"><span class="id" type="notation">Bob</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a><br/>
+&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'charlie'"><span class="id" type="notation">charlie</span></a> <a class="idref" href="recursion.html#::'rdf_type'"><span class="id" type="notation">rdf_type</span></a> <a class="idref" href="recursion.html#::'foaf_Person'"><span class="id" type="notation">foaf_Person</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a><br/>
+&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">(</span></a><a class="idref" href="recursion.html#t3"><span class="id" type="constructor">t3</span></a> <a class="idref" href="recursion.html#::'charlie'"><span class="id" type="notation">charlie</span></a> <a class="idref" href="recursion.html#::'foaf_name'"><span class="id" type="notation">foaf_name</span></a> <a class="idref" href="recursion.html#::'Charlie'"><span class="id" type="notation">Charlie</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#:list_scope:x_'::'_x"><span class="id" type="notation">::</span></a><br/>
+&nbsp;&nbsp;<a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#nil"><span class="id" type="constructor">nil</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Fact</span> <a name="alice_graph_is_valid"><span class="id" type="lemma">alice_graph_is_valid</span></a>: <a class="idref" href="recursion.html#is_graph"><span class="id" type="definition">is_graph</span></a> <a class="idref" href="recursion.html#alice_graph"><span class="id" type="definition">alice_graph</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a>.<br/>
+<span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

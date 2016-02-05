@@ -1,0 +1,212 @@
+(** 
+* Formal Specification of Recursion in W3C SHACL
+
+This document defines SHACL and gives a meaning to
+certain types of recursion.
+*)
+
+(*Require Import Bool.*)
+Require Import List.
+
+(** 
+** Basic RDF Concepts
+
+*** RDF Terms
+
+RDF is a language for making _statements_ about things.
+Statements are composed of _terms_.
+A term is either an _IRI_, a _literal_, or a _blank node_.
+
+- an IRI is a sequence of characters that identifies a resource
+- a literal is a lexical value that identifies some value of some datatype such as a number or character string
+- blank node identifies an existential variable
+
+Each of these types of terms has its own syntax rules, but to start each type
+will be modelled as a disjoint, countably infinite
+subset of terms that together cover the set of all terms.
+
+Let [Term] denote the set of all RDF terms.
+*)
+
+Inductive Term : Set :=
+  iri : nat -> Term
+| lit : nat -> Term
+| bn : nat -> Term .
+
+(** *** IRIs *)
+
+Definition is_iri (t : Term) :=
+  match t with
+    iri _ => true | _ => false
+  end .
+
+Inductive IRI (t: Term) : Prop :=
+iri_term: forall n: nat, IRI(iri n).
+
+Fact good_iri: is_iri (iri 0) = true.
+auto.
+Qed.
+
+Fact bad_iri: is_iri (lit 0) = false.
+auto.
+Qed.
+
+(** *** Literals*)
+
+Definition is_lit (t : Term) :=
+  match t with 
+    lit _ => true | _ => false
+  end .
+
+(** *** Blank Nodes *)
+
+Definition is_bn (t : Term) :=
+  match t with
+    bn _ => true | _ => false
+  end.
+
+(** *** Terms Used in Examples
+
+Define some symbols for the terms we use in the examples. *)
+
+Notation "'Alice'" := (lit 0).
+Notation "'Bob'" := (lit 1).
+Notation "'Charlie'" := (lit 2).
+
+Notation "'alice'" := (iri 0).
+Notation "'bob'" := (iri 1).
+Notation "'charlie'" := (iri 2).
+
+Notation "'rdf_type'" := (iri 3).
+Notation "'foaf_Person'" := (iri 4).
+Notation "'foaf_name'" := (iri 5).
+Notation "'foaf_knows'" := (iri 6).
+
+Fact Alice_is_Alice: Alice = Alice.
+auto.
+Qed.
+
+Fact Alice_is_not_Bob: Alice <> Bob.
+discriminate.
+Qed.
+
+Fact Alice_is_not_an_iri: is_iri Alice = false.
+auto. 
+Qed.
+
+Fact Alice_is_a_literal: is_lit Alice = true.
+auto.
+Qed.
+
+(**
+*** 3-Tuples of Terms
+
+RDF statements are formed from 3-tuples of RDF terms.
+
+Let [Term3] be set set of all 3-tuples of RDF terms.
+*)
+
+Inductive Term3 : Set := 
+  t3 : Term -> Term -> Term -> Term3.
+
+Definition alice_is_a_person := t3 alice rdf_type foaf_Person.
+
+(**
+*** subject, predicate, object
+
+- the first term is called the _subject_
+
+- the second term is called the _predicate_
+
+- the third term is called the _object_
+
+*)
+
+Definition subject (t : Term3) :=
+  match t with t3 s _ _ => s end.
+
+Definition predicate (t : Term3) :=
+  match t with t3 _ p _ => p end.
+
+Definition object (t : Term3) :=
+  match t with t3 _ _ o => o end.
+
+Fact subject_is_alice: subject alice_is_a_person = alice.
+auto.
+Qed.
+
+Fact predicate_is_rdf_type: predicate alice_is_a_person = rdf_type.
+auto.
+Qed.
+
+Fact object_is_foaf_Person: (object alice_is_a_person) = foaf_Person.
+auto.
+Qed.
+
+(** *** Triples
+A 3-tuple defines a valid RDF statement when the subject is not a literal
+and the predicate is an IRI.
+A valid RDF statement is called a _triple_.
+*)
+
+Definition is_triple (t : Term3) :=
+  let s := subject t in 
+    let p := predicate t in
+      (andb (negb (is_lit s)) (is_iri p)) .
+
+Fact valid_triple :  is_triple alice_is_a_person = true.
+auto.
+Qed.
+
+(** The 3-tuple (Alice, Alice, Alice) is not a valid triple because
+the subject is a literal and the predicate is not an IRI. *)
+
+Fact invalid_triple: is_triple (t3 Alice Alice Alice) = false.
+auto.
+Qed.
+
+Definition Graph := list Term3.
+
+Fixpoint is_graph (g: Graph) :=
+  match g with
+    nil => true
+  | t::h => if (negb (is_triple t)) then false else (is_graph h)
+  end.
+
+Definition empty_graph := nil:(list Term3).
+
+Fact empty_graph_is_valid: is_graph empty_graph = true.
+auto.
+Qed.
+
+Definition singleton_graph := alice_is_a_person :: nil.
+
+Fact singleton_graph_is_valid: is_graph singleton_graph = true.
+auto.
+Qed.
+
+Definition Alice_graph := (t3 Alice Alice Alice) :: nil.
+
+Fact Alice_graph_is_invalid: is_graph Alice_graph = false.
+auto.
+Qed.
+
+Definition alice_graph :=
+  (t3 alice rdf_type foaf_Person) ::
+  (t3 alice foaf_name Alice) ::
+  (t3 alice foaf_knows bob) ::
+  (t3 alice foaf_knows charlie) ::
+  (t3 bob rdf_type foaf_Person) ::
+  (t3 bob foaf_name Bob) ::
+  (t3 charlie rdf_type foaf_Person) ::
+  (t3 charlie foaf_name Charlie) ::
+  nil.
+
+Fact alice_graph_is_valid: is_graph alice_graph = true.
+auto.
+Qed.
+
+
+
+
+
